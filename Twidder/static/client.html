@@ -14,7 +14,7 @@
 	      <label>Email</label>
 	    </div>
 	    <div class="inputContainer">
-	      <input id="loginEmail" type="email" required></input>
+	      <input id="loginEmail" name="loginEmail" type="email" required></input>
 	    </div>
 	  </div>
 	  <div class="formRow">
@@ -22,12 +22,12 @@
 	      <label>Password</label>
 	    </div>
 	    <div class="inputContainer">
-	      <input id="loginPassword" type="password" required></input>
+	      <input id="loginPassword" name="loginPassword" type="password" required></input>
 	    </div>
 	  </div>
 	  <div class="formRow">
 	    <div class="inputContainer">
-	      <button id="loginSubmit" type="submit">Login</button>
+	      <button id="loginSubmit" name="loginSubmit" type="submit">Login</button>
 	    </div>
 	  </div>
 	</form>
@@ -40,7 +40,7 @@
 	      <label>First Name</label>
 	    </div>
 	    <div class="inputContainer">
-	      <input id="firstName" type="text" required></input>
+	      <input id="firstName" name="firstName" type="text" required></input>
 	    </div>
 	  </div>
 	  <div class="formRow">
@@ -48,7 +48,7 @@
 	      <label>Last Name</label>
 	    </div>
 	    <div class="inputContainer">
-	      <input id="lastName" type="text" required></input>
+	      <input id="lastName" name="lastName" type="text" required></input>
 	    </div>
 	  </div>
 	  <div class="formRow">
@@ -56,7 +56,7 @@
 	      <label>Gender</label>
 	    </div>
 	    <div class="inputContainer">
-	      <select id="gender" required>
+	      <select id="gender" name="gender" required>
 		<option value="Male">Male</option>
 		<option value="Female">Female</option>
 	      </select>
@@ -67,7 +67,7 @@
 	      <label>City</label>
 	    </div>
 	    <div class="inputContainer">
-	      <input id="city" type="text" required></input>
+	      <input id="city" name="city" type="text" required></input>
 	    </div>
 	  </div>
 	  <div class="formRow">
@@ -75,7 +75,7 @@
 	      <label>Country</label>
 	    </div>
 	    <div class="inputContainer">
-	      <input id="country" type="text" required></input>
+	      <input id="country" name="country" type="text" required></input>
 	    </div>
 	  </div>
 	  <div class="formRow">
@@ -83,7 +83,7 @@
 	      <label>Email</label>
 	    </div>
 	    <div class="inputContainer">
-	      <input id="signupEmail" type="email" required></input>
+	      <input id="signupEmail" name="signupEmail" type="email" required></input>
 	    </div>
 	  </div>
 	  <div class="formRow">
@@ -91,7 +91,7 @@
 	      <label>Password</label>
 	    </div>
 	    <div class="inputContainer">
-	      <input id="signupPassword" type="password" required></input>
+	      <input id="signupPassword" name="signupPassword" type="password" required></input>
 	    </div>
 	  </div>
 	  <div class="formRow">
@@ -99,12 +99,12 @@
 	      <label>Repeat pwd</label>
 	    </div>
 	    <div class="inputContainer">
-	      <input id="repeatPassword" type="password" required></input>
+	      <input id="repeatPassword" name="repeatPassword" type="password" required></input>
 	    </div>
 	  </div>
 	  <div class="formRow">
 	    <div class="inputContainer">
-	      <button id="loginSubmit" type="submit">Sign up</button>
+	      <button id="signupSubmit" name="signupSubmit" type="submit">Sign up</button>
 	    </div>
 	  </div>
 	</form>
@@ -143,21 +143,20 @@
 	    <form id="homePostMessageForm" class="postMessageForm">	
 	      <div class="formRow">
 		<div class="inputContainer">
-		  <textarea id="homeMessage" placeholder="Write message here" required></textarea>
+		  <textarea id="homeMessage" name="homeMessage" placeholder="Write message here" required></textarea>
 		</div>
 	      </div>      
 	      <div class="formRow">
 		<div class="inputContainer">
-		  <button id="homePostMessageSubmit" type="submit">Post message</button>
+		  <button id="homePostMessageSubmit" name="homePostMessageSubmit" type="submit">Post message</button>
 		</div>
 	      </div>
 	    </form>
 	  </div>
 	  <div id="homeMessageWall" class="messageWall">
 	    <h1>My wall</h1>
-	    <button id="homeRefreshButton" class="refreshButton">Refresh</button>
-	    <div id="homeMessages" class="messages">
-	    </div>
+	    <button id="homeRefreshButton" name="homeRefreshButton" class="refreshButton">Refresh</button>
+	    <div id="homeMessages" class="messages"></div>
 	  </div>
 	</div>
 	<div id="browseView" class="content">
@@ -166,15 +165,15 @@
 	    <form id="searchProfileForm">
 	      <div class="formRow">
 		<div class="inputContainer">
-		  <input id="profileEmail" type="email" placeholder="Type email here" required></input>
+		  <input id="profileEmail" name="profileEmail" type="email" placeholder="Type email here" required></input>
 		</div>
 		<div class="inputContainer">
-		  <button id="submitSearchProfile" type="submit">Search</button>
+		  <button id="submitSearchProfile" name="submitSearchProfile" type="submit">Search</button>
 		</div>
 	      </div>    
 	    </form>
 	  </div>
-	  <div id="browseProfileInformation" class="profileInformation">
+	  <div id="browseProfileInformation" class="profileInformation hideBrowseElement">
 	    <h1>Profile</h1>
 	    <h2>Profile information</h2>
 	    <p id="browseProfileInfoName"></p>
@@ -183,24 +182,24 @@
 	    <p id="browseProfileInfoCity"></p>
 	    <p id="browseProfileInfoCountry"></p>
 	  </div>
-	  <div id="postMessage" class="postMessage">
+	  <div id="browsePostMessage" class="postMessage hideBrowseElement">
 	    <h1>Post message</h1>
-	    <form id="browsePostMessageForm" class="postMessageForm">	
+	    <form id="browsePostMessageForm" class="postMessageForm ">	
 	      <div class="formRow">
 		<div class="inputContainer">
-		  <textarea id="browseMessage" placeholder="Write message here" required></textarea>
+		  <textarea id="browseMessage" name="browseMessage" placeholder="Write message here" required></textarea>
 		</div>
 	      </div>      
 	      <div class="formRow">
 		<div class="inputContainer">
-		  <button id="browserPostMessageSubmit" type="submit">Post message</button>
+		  <button id="browserPostMessageSubmit" name="browserPostMessageSubmit" type="submit">Post message</button>
 		</div>
 	      </div>
 	    </form>
 	  </div>
-	  <div id="browseMessageWall" class="messageWall">
+	  <div id="browseMessageWall" class="messageWall hideBrowseElement">
 	    <h1>Wall</h1>
-	    <button id="browseRefreshButton" class="refreshButton">Refresh</button>
+	    <button id="browseRefreshButton" name="browseRefreshButton" class="refreshButton">Refresh</button>
 	    <div id="browseMessages" class="messages">
 	    </div>
 	  </div>
@@ -214,7 +213,7 @@
 		  <label>Old password</label>
 		</div>
 		<div class="inputContainer">
-		  <input id="oldPassword" type="password" required></input>
+		  <input id="oldPassword" name="oldPassword" type="password" required></input>
 		</div>
 	      </div>	  
 	      <div class="formRow">
@@ -222,7 +221,7 @@
 		  <label>New password</label>
 		</div>
 		<div class="inputContainer">
-		  <input id="newPassword" type="password" required></input>
+		  <input id="newPassword" name="newPassword" type="password" required></input>
 		</div>
 	      </div>
 	      <div class="formRow">
@@ -230,12 +229,12 @@
 		  <label>Repeat new pwd</label>
 		</div>
 		<div class="inputContainer">
-		  <input id="repeatNewPassword" type="password" required></input>
+		  <input id="repeatNewPassword" name="repeatNewPassword" type="password" required></input>
 		</div>
 	      </div>
 	      <div class="formRow">
 		<div class="inputContainer">
-		  <button id="changePasswordSubmit" type="submit">Change password</button>
+		  <button id="changePasswordSubmit" name="changePasswordSubmit" type="submit">Change password</button>
 		</div>
 	      </div>
 	    </form>

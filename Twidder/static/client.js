@@ -29,13 +29,48 @@ var hideMessage = function()
     alertMessage.innerHTML = "";
 }
 
+var makeHttpRequest = function(type, url, dataString, callbackFunction)
+{
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function()
+    {
+	if (xhttp.readyState == 4)
+	{
+	    var response = JSON.parse(xhttp.responseText);
+	    
+	    if (response.success)
+	    {
+		callbackFunction(response);
+	    }
+	    else
+	    {		
+		displayMessage(response.message, "errorMessage");
+	    }
+	}
+    };
+
+    xhttp.open(type, "http://127.0.0.1:5000/" + url, true);
+
+    if (type == "POST")
+    {
+	xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	
+	xhttp.send(dataString);
+    }
+    else
+    {
+	xhttp.send();
+    }
+}
+
 var signOut = function()
 {
-    serverstub.signOut(localStorage.getItem("userToken"));
-
-    localStorage.removeItem("userToken");
-
-    location.reload();
+    makeHttpRequest("GET", "sign_out/" + localStorage.getItem("userToken"), "", function(response) {
+	localStorage.removeItem("userToken");
+	
+	loadSignedOut();
+    });
 }
 
 var loginSubmit = function()
@@ -43,29 +78,15 @@ var loginSubmit = function()
     var loginEmail = document.getElementById("loginEmail");
     var loginPassword = document.getElementById("loginPassword");
 
-    var xhttp = new XMLHttpRequest();
-
-    xhttp.open("POST", "sign_in", false);
-
     var dataString = "loginEmail=" + loginEmail.value + "&loginPassword=" + loginPassword.value;
 
-    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-
-    xhttp.send(dataString);
-
-    var response = JSON.parse(xhttp.responseText);
-   
-    if (response.success)
-    {
+    makeHttpRequest("POST", "sign_in", dataString, function(response) {
 	localStorage.setItem("userToken", response.data);
-    }
-    else
-    {
-	loginEmail.setCustomValidity(response.message);
-	loginEmail.checkValidity();
-
-	return false;
-    }
+	
+	loadSignedIn();	
+    }); 
+		
+    return false;
 }
 
 var signupSubmit = function()
@@ -73,39 +94,21 @@ var signupSubmit = function()
     var signupPassword = document.getElementById("signupPassword");
     var repeatPassword = document.getElementById("repeatPassword");
     
-    if (validatePasswordLength(signupPassword) && validatePasswordMatch(signupPassword, repeatPassword))
+    if (validPasswordLength(signupPassword.value) && validPasswordMatch(signupPassword.value, repeatPassword.value))
     {
-	var xhttp = new XMLHttpRequest();
-
-	xhttp.open("POST", "sign_up", false);
-
 	var dataString = "signupEmail=" + document.getElementById("signupEmail").value +
 	    "&signupPassword=" + signupPassword.value +
-	    "&repeatPassword=" + repeatPassword.value +
 	    "&firstName=" + document.getElementById("firstName").value +
 	    "&lastName=" + document.getElementById("lastName").value +
 	    "&gender=" + document.getElementById("gender").value +
 	    "&city=" + document.getElementById("city").value + 
 	    "&country=" + document.getElementById("country").value;
 
-	xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-
-	xhttp.send(dataString);
-
-	var response = JSON.parse(xhttp.responseText);
-
-	if (response.success)
-	{
+	makeHttpRequest("POST", "sign_up", dataString, function(response) {
 	    displayMessage(response.message, "infoMessage");
 	    
 	    document.getElementById("signupForm").reset();
-	}
-	else
-	{ 
-	    var signupEmail = document.getElementById("signupEmail");
-	    
-	    signupEmail.setCustomValidity(response.message);
-	}
+	}); 
     }
 
     return false;
@@ -117,33 +120,16 @@ var changePasswordSubmit = function()
     var newPassword = document.getElementById("newPassword");
     var repeatNewPassword = document.getElementById("repeatNewPassword");
 
-    if (validatePasswordLength(oldPassword) && validatePasswordLength(newPassword) && validatePasswordMatch(repeatNewPassword, newPassword))
+    if (validPasswordLength(newPassword.value) && validPasswordMatch(newPassword.value, repeatNewPassword.value))
     {
-	var xhttp = new XMLHttpRequest();
+	var dataString = "oldPassword=" + oldPassword.value + 
+	    "&newPassword=" + newPassword.value;
 	
-	xhttp.open("POST", "change_password/" + localStorage.getItem("userToken"), false);
-	
-	var dataString = "token=" + localStorage.getItem("userToken") +
-	    "&oldPassword=" + oldPassword.value + 
-	    "&newPassword=" + newPassword.value + 
-	    "&repeatNewPassword=" + repeatNewPassword.value;
-	
-	xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-	
-	xhttp.send(dataString);
-
-	var response = JSON.parse(xhttp.responseText);
-
-	if (response.success)
-	{
+	makeHttpRequest("POST", "change_password/" + localStorage.getItem("userToken"), dataString, function(response) {
 	    displayMessage(response.message, "infoMessage");
-
+	    
 	    document.getElementById("changePasswordForm").reset();
-	}
-	else
-	{
-	    oldPassword.setCustomValidity(response.message);
-	}
+	}); 
     }
 	    
     return false;
@@ -153,9 +139,11 @@ var homePostMessageSubmit = function()
 {
     var message = document.getElementById("homeMessage");
 
-    postMessage(message.value, getEmail());
+    getEmail(function(email) {
+	postMessage(message.value, email);
 
-    loadMessages(getEmail(), "homeMessages");
+	loadMessages(email, "homeMessages")
+    });
 
     return false;
 }
@@ -164,18 +152,27 @@ var searchProfileSubmit = function()
 {
     var profileEmail = document.getElementById("profileEmail");
     
-    var profileInformation = loadProfileInformation(profileEmail.value);
-
-    if (profileInformation != undefined)
-    {
+    loadProfileInformation(profileEmail.value, function(profileInformation) {
 	appendSearchProfileInformation(profileInformation);
 
 	loadMessages(profileEmail.value, "browseMessages");
 
 	localStorage.setItem("currentBrowseEmail", profileEmail.value);
-    }
+
+	showBrowseElements();
+    });
 
     return false;
+}
+
+var showBrowseElements = function()
+{
+    var browseElements = document.getElementsByClassName("hideBrowseElement");
+
+    for (var i = browseElements.length - 1; i >= 0; --i)
+    {
+	browseElements[i].classList.remove("hideBrowseElement");
+    }
 }
 
 var browsePostMessageSubmit = function()
@@ -191,53 +188,21 @@ var browsePostMessageSubmit = function()
     
 var postMessage = function(message, email)
 {	
-    var xhttp = new XMLHttpRequest();
-
-    xhttp.open("POST", "post_message/" + localStorage.getItem("userToken") + "/" + email, false);
-
-    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    
     var dataString = "message=" + message;
 
-    xhttp.send(dataString);
-
-    console.log(xhttp.responseText);
-    
-    //var response = JSON.parse(xhttp.responseText);
-
-    //displayMessage(response.message, "infoMessage");
+    makeHttpRequest("POST", "post_message/" + localStorage.getItem("userToken") + "/" + email, dataString, function(response) {
+	displayMessage(response.message, "infoMessage");	
+    });
 }
 
-var validatePasswordLength = function(passwordElement)
+var validPasswordLength = function(password)
 {
-    if (passwordElement.value.length < 6)
-    {
-	passwordElement.setCustomValidity("Password must be at least 6 characters long");
-
-	return false;
-    }
-    else
-    {
-	passwordElement.setCustomValidity("");
-
-	return true;
-    }
+    return (password.length >= 6);
 }
 
-var validatePasswordMatch = function(repeatPasswordElement, passwordElement)
+var validPasswordMatch = function(repeatPassword, password)
 {
-    if (passwordElement.value != repeatPasswordElement.value)
-    {
-	repeatPasswordElement.setCustomValidity("Password doesn't match");
-
-	return false;
-    }
-    else
-    {
-	repeatPasswordElement.setCustomValidity("");
-
-	return true;
-    }
+    return (password == repeatPassword);
 }
 
 var menuItemClick = function(menuItem)
@@ -270,32 +235,19 @@ var menuItemClick = function(menuItem)
     view.classList.add("selectedContent");
 }
 
-var loadProfileInformation = function(email)
+var loadProfileInformation = function(email, callbackFunction)
 {
-    var xhttp = new XMLHttpRequest();
-
-    xhttp.open("GET", "get_user_data/" + localStorage.getItem("userToken") + "/" + email, false);
-
-    xhttp.send();
-
-    var response = JSON.parse(xhttp.responseText);
-
-    if (response.success)
-    {
+    makeHttpRequest("GET", "get_user_data/" + localStorage.getItem("userToken") + "/" + email, "", function(response) {
 	var profileInformation = {
 	    name: response.data.firstName + " " + response.data.lastName,
 	    email: response.data.email,
 	    gender: response.data.gender,
 	    city: response.data.city,
-	    country: response.data.country,
+		    country: response.data.country,
 	};
 
-	return profileInformation;
-    }
-    else
-    {
-	displayMessage(response.message, "errorMessage");
-    }
+	callbackFunction(profileInformation);
+    });
 }
 
 var appendProfileInformation = function(profileInformation)
@@ -318,27 +270,14 @@ var appendSearchProfileInformation = function(profileInformation)
 
 var loadMessages = function(email, elementId)
 {
-    var xhttp = new XMLHttpRequest();
-
-    xhttp.open("GET", "get_user_messages/" + localStorage.getItem("userToken") + "/" + email, false);
-
-    xhttp.send();
-    
-    var response = JSON.parse(xhttp.responseText);
-
-    if (response.success)
-    {
+    makeHttpRequest("GET", "get_user_messages/" + localStorage.getItem("userToken") + "/" + email, "", function(response) {
 	document.getElementById(elementId).innerHTML = "";
-
+	
 	for (var i = 0; i < response.data.length; ++i)
 	{
 	    createMessage(response.data[i].writer, response.data[i].message, response.data[i].datePosted, elementId);
 	}
-    }
-    else
-    {
-	displayMessage(response.message, "errorMessage");
-    }
+    });
 }
 
 var createMessage = function(writer, message, datePosted, elementId)
@@ -366,24 +305,12 @@ var createMessage = function(writer, message, datePosted, elementId)
     document.getElementById(elementId).appendChild(container);
 }
 
-var getEmail = function()
+var getEmail = function(callbackFunction)
 {
-    var xhttp = new XMLHttpRequest();
-
-    xhttp.open("GET", "get_user_data/" + localStorage.getItem("userToken"), false);
-
-    xhttp.send();
-    
-    var response = JSON.parse(xhttp.responseText);
-
-    if (response.success)
-    {
-	return response.data.email;
-    }
-    else
-    {
-	displayMessage(response.message, "errorMessage");
-    }
+    makeHttpRequest("GET", "get_user_data/" + localStorage.getItem("userToken"), "", function(response) {
+	console.log(response.data);
+	callbackFunction(response.data.email);
+    });
 }
 
 var clearCustomValidityOnInput = function(element)
@@ -398,15 +325,21 @@ var validatePasswordLengthOnInput = function(element)
 {
     element.oninput = function()
     {
-	validatePasswordLength(element);
+	if (validPasswordLength(element.value)) 
+	    element.setCustomValidity("");
+	else
+	    element.setCustomValidity("Password must be at least 6 characters long.");
     }
 }
 
 var validatePasswordMatchOnInput = function(element, elementToMatch)
 {
-    element.oninput = function()
+    elementToMatch.oninput = function()
     {
-	validatePasswordMatch(element, elementToMatch);
+	if (validPasswordMatch(element.value, elementToMatch.value))
+	    elementToMatch.setCustomValidity("");
+	else
+	    elementToMatch.setCustomValidity("Password doesn't match.");
     }
 }
 
@@ -423,9 +356,7 @@ var setupSignUpForm = function()
 
     validatePasswordLengthOnInput(document.getElementById("signupPassword"));
 
-    validatePasswordMatchOnInput(document.getElementById("repeatPassword"), document.getElementById("signupPassword"));
-    
-    clearCustomValidityOnInput(document.getElementById("signupEmail"));
+    validatePasswordMatchOnInput(document.getElementById("signupPassword"), document.getElementById("repeatPassword"));
 }
 
 var setupMenuItems = function()
@@ -445,16 +376,16 @@ var setupChangePasswordForm = function()
 {
     document.getElementById("changePasswordForm").onsubmit = changePasswordSubmit;
 
-    validatePasswordLengthOnInput(document.getElementById("oldPassword"));
-
     validatePasswordLengthOnInput(document.getElementById("newPassword"));
 	
-    validatePasswordMatchOnInput(document.getElementById("repeatNewPassword"), document.getElementById("newPassword"));
+    validatePasswordMatchOnInput(document.getElementById("newPassword"), document.getElementById("repeatNewPassword"));
 }
 
 var loadProfile = function(email, wallId)
-{
-    appendProfileInformation(loadProfileInformation(email));
+{    
+    loadProfileInformation(email, function(profileInformation) {
+	appendProfileInformation(profileInformation);
+    });
 
     loadMessages(email, wallId);
 }
@@ -467,35 +398,48 @@ var setupRefreshButton = function(element, email, wallId)
     }
 }
 
+var loadSignedOut = function()
+{    
+    displayView("welcomeView");
+
+    setupLoginForm();
+
+    setupSignUpForm();
+}
+
+var loadSignedIn = function()
+{
+    displayView("profileView");
+
+    getEmail(function(email) {
+	setupRefreshButton(document.getElementById("homeRefreshButton"), email, "homeMessages");
+	
+	loadProfile(email, "homeMessages");
+    });
+
+    setupMenuItems();
+
+    setupChangePasswordForm();
+
+    document.getElementById("homePostMessageForm").onsubmit = homePostMessageSubmit;
+
+    setupRefreshButton(document.getElementById("browseRefreshButton"), localStorage.getItem("currentBrowseEmail"), "browseMessages");
+
+    document.getElementById("searchProfileForm").onsubmit = searchProfileSubmit;
+
+    document.getElementById("browsePostMessageForm").onsubmit = browsePostMessageSubmit;
+
+    document.getElementById("signOut").onclick = signOut;
+}
+
 window.onload = function()
 {
     if (localStorage.getItem("userToken") === null)
     {	
-	displayView("welcomeView");
-
-	setupLoginForm();
-
-	setupSignUpForm();
+	loadSignedOut();
     }
     else
     {
-	displayView("profileView");
-
-	loadProfile(getEmail(), "homeMessages");
-
-	setupMenuItems();
-
-	setupChangePasswordForm();
-
-	document.getElementById("homePostMessageForm").onsubmit = homePostMessageSubmit;
-
-	setupRefreshButton(document.getElementById("homeRefreshButton"), getEmail(), "homeMessages");
-	setupRefreshButton(document.getElementById("browseRefreshButton"), localStorage.getItem("currentBrowseEmail"), "browseMessages");
-
-	document.getElementById("searchProfileForm").onsubmit = searchProfileSubmit;
-
-	document.getElementById("browsePostMessageForm").onsubmit = browsePostMessageSubmit;
-
-	document.getElementById("signOut").onclick = signOut;
+	loadSignedIn();
     }
 }

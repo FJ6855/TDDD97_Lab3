@@ -354,3 +354,8 @@ div.messageContainer p
     padding: 10px;
     background-color: #FFF;
 }
+
+.hideBrowseElement
+{
+    display: none;
+}
