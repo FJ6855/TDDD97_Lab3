@@ -3,12 +3,15 @@ from flask import Flask, request
 from flask.ext.bcrypt import Bcrypt
 from wtforms import Form, TextField, PasswordField, validators
 from random import randint
+from geventwebsocket import WebSocketError
 
 from Twidder import app
 
 import database_helper
 
 bcrypt = Bcrypt(app)
+
+webSockets = {}
 
 class SignUpForm(Form):
     firstName = TextField('First name', [validators.Required()])
@@ -65,6 +68,9 @@ def signIn():
         token = createToken()
         result = database_helper.insertSignedInUser(token, request.form['loginEmail']);
         if result == True:
+            global webSockets
+            if webSockets.has_key(request.form['loginEmail']):
+                webSockets[request.form['loginEmail']].send("logout");
             return json.dumps({'success': True, 'message': 'Successfully signed in.', 'data': token}), 200
         else:
             return json.dumps({'success': False, 'message': 'Could not sign in user.'}), 503
@@ -93,6 +99,8 @@ def signOut(token):
     if email is not None:
         result = database_helper.deleteSignedInUser(token)
         if result == True:
+            global webSockets
+            del webSockets[email]
             return json.dumps({'success': True, 'message': 'Successfully signed out.'}), 200
         else:
             return json.dumps({'success': False, 'message': 'Could not delete signed in user.'}), 503
@@ -169,3 +177,18 @@ def postMessage(token, email):
             return json.dumps({'success': False, 'message': 'No such user.'}), 404
     else:
         return json.dumps({'success': False, 'message': 'You are not signed in.'}), 405
+
+          
+@app.route('/api')
+def api():
+    if request.environ.get('wsgi.websocket'):
+        ws = request.environ['wsgi.websocket']
+        message = ws.receive()
+        global webSockets
+        webSockets[message] = ws
+        try:
+            while True:
+                message = ws.receive()
+        except WebSocketError:
+            print "Web socket error"
+    return ""

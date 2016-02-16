@@ -310,6 +310,7 @@ div.messageContainer p
     padding: 0px;
     font-family: Arial;
     font-size: 12px;
+    word-wrap: break-word;
 }
 
 #browseView

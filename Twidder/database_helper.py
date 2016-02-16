@@ -65,5 +65,8 @@ def insertMessage(writerEmail, email, message):
 def deleteSignedInUser(token):
     return executeChange('delete from signedInUsers where token = ?', (token,))
 
+def deleteSignedInUserByEmail(email):
+    return executeChange('delete from signedInUsers where email = ?', (email,))
+
 def updateUserPassword(email, passwordHash):
     return executeChange('update users set password = ? where email = ?', (passwordHash, email))

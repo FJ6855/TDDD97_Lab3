@@ -1,3 +1,14 @@
+var webSocket;
+/*
+webSocket.onopen = function()
+{
+    
+};
+
+webSocket.onerror = function (error) {
+    console.log('WebSocket Error ' + error);
+};*/
+
 var displayView = function(viewId)
 {
     var alertMessageView = document.getElementById("alertMessageView");
@@ -83,7 +94,7 @@ var loginSubmit = function()
     makeHttpRequest("POST", "sign_in", dataString, function(response) {
 	localStorage.setItem("userToken", response.data);
 	
-	loadSignedIn();	
+	loadSignedIn();
     }); 
 		
     return false;
@@ -308,7 +319,6 @@ var createMessage = function(writer, message, datePosted, elementId)
 var getEmail = function(callbackFunction)
 {
     makeHttpRequest("GET", "get_user_data/" + localStorage.getItem("userToken"), "", function(response) {
-	console.log(response.data);
 	callbackFunction(response.data.email);
     });
 }
@@ -430,6 +440,28 @@ var loadSignedIn = function()
     document.getElementById("browsePostMessageForm").onsubmit = browsePostMessageSubmit;
 
     document.getElementById("signOut").onclick = signOut;
+    
+    webSocket = new WebSocket("ws://127.0.0.1:5000/api");
+    
+    webSocket.onopen = function()
+    {
+	getEmail(function(email) {
+	    webSocket.send(email);
+	});
+    };
+    
+    webSocket.onmessage = function(message)
+    {
+	console.log(message);
+	
+	makeHttpRequest("GET", "sign_out/" + localStorage.getItem("userToken"), "", function(response) {
+	    localStorage.removeItem("userToken");
+	    
+	    loadSignedOut();
+	    
+	    webSocket.close();
+	});
+    };
 }
 
 window.onload = function()
